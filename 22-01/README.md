@@ -60,7 +60,7 @@ provider "yandex" {
   zone      = var.zone         # Зона для ресурсов
 }
 ```
-Затем ```compute.tf``` в котором описываю три ВМ: NAT-инстанс, публичную ВМ и приватную ВМ.
+Затем [compute.tf](https://github.com/Anton-Shcherbatykh/FOPS-38_22/blob/main/22-01/Files/compute.tf) в котором описываю три ВМ: NAT-инстанс, публичную ВМ и приватную ВМ.
 
 
 

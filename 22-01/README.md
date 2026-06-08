@@ -76,3 +76,12 @@ provider "yandex" {
 Файл [terraform.tfvars](https://github.com/Anton-Shcherbatykh/FOPS-38_22/blob/main/22-01/Files/terraform.tfvars) прикладываю к выполнению ДЗ в "очищенном" виде в целях безопасности (ну т.е. "как положено").
 
 
+После того, как всё создано, подключаюсь к публичной ВМ командой
+
+```bash
+ssh -i ~/.ssh/id_rsa ubuntu@$(terraform output -raw public_vm_external_ip)
+```
+
+![alt text](Pictures/pic08.jpg)
+
+![alt text](Pictures/pic09.jpg)

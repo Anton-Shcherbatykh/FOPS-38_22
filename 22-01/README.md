@@ -67,4 +67,12 @@ provider "yandex" {
 
 ![alt text](Pictures/pic06.jpg)
 
+Не забываем создать [variables.tf](https://github.com/Anton-Shcherbatykh/FOPS-38_22/blob/main/22-01/Files/variables.tf) в котором опишем все переменные.
+
+А также для удобства создаю [outputs.tf](https://github.com/Anton-Shcherbatykh/FOPS-38_22/blob/main/22-01/Files/outputs.tf) чтобы после команды ```terraform apply``` увидеть IP-адреса созданных ВМ
+
+![alt text](Pictures/pic07.jpg)
+
+Файл [terraform.tfvars](https://github.com/Anton-Shcherbatykh/FOPS-38_22/blob/main/22-01/Files/terraform.tfvars) прикладываю к выполнению ДЗ в "очищенном" виде в целях безопасности (ну т.е. "как положено").
+
 

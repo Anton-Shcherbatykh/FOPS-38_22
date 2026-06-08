@@ -85,3 +85,7 @@ ssh -i ~/.ssh/id_rsa ubuntu@$(terraform output -raw public_vm_external_ip)
 ![alt text](Pictures/pic08.jpg)
 
 ![alt text](Pictures/pic09.jpg)
+
+Успешно подключивших, проверяю доступ в интернет
+
+![alt text](Pictures/pic010.jpg)

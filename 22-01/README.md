@@ -60,9 +60,25 @@ provider "yandex" {
   zone      = var.zone         # Зона для ресурсов
 }
 ```
-Затем [compute.tf](https://github.com/Anton-Shcherbatykh/FOPS-38_22/blob/main/22-01/Files/compute.tf) в котором описываю три ВМ: NAT-инстанс, публичную ВМ и приватную ВМ.
+Затем [compute.tf](https://github.com/Anton-Shcherbatykh/FOPS-38_22/blob/main/22-01/Files/compute.tf) в котором описываю три ВМ: 
+- NAT-инстанс;
+- ВМ public-vm с публичным IP, имеющую доступ в интернет напрямую;
+- ВМ private-vm без публичного IP, доступную только через public-vm.
 
+![alt text](Pictures/pic03.jpg)
 
+Потом [network.tf]([22-01/Files/network.tf](https://github.com/Anton-Shcherbatykh/FOPS-38_22/blob/main/22-01/Files/network.tf) в котором 
 
+Создаю VPC в зоне ru-central1-a.
+
+Публичную подсеть public (192.168.10.0/24) содержит:
+
+- NAT-инстанс с внутренним адресом 192.168.10.254 и внешним IP (через nat = true).
+
+Приватную подсеть private (192.168.20.0/24) содержит:
+
+- Таблицу маршрутизации, направляющую весь трафик (0.0.0.0/0) на NAT-инстанс.
+
+![alt text](Pictures/pic02.jpg)
 
 

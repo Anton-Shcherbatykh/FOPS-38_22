@@ -17,3 +17,52 @@
 ---
 
 ### Ответ 1.
+
+**Архитектура**
+
+Создаю VPC в зоне ru-central1-a.
+
+Публичная подсеть public (192.168.10.0/24) содержит:
+
+- NAT-инстанс с внутренним адресом 192.168.10.254 и внешним IP (через nat = true).
+- ВМ public-vm с публичным IP, имеющая доступ в интернет напрямую.
+
+Приватная подсеть private (192.168.20.0/24) содержит:
+
+- Таблицу маршрутизации, направляющую весь трафик (0.0.0.0/0) на NAT-инстанс.
+- ВМ private-vm без публичного IP, доступную только через public-vm.
+
+Проверка: через public-vm подключаюсь к private-vm и выполняю ping 8.8.8.8 – интернет доступен благодаря NAT.
+
+**Непосредственное выполнение**
+
+У меня уже установлен Terrafom на локальной ВМ под управлением Debian 12 
+
+![alt text](Pictures/pic01.jpg)
+
+Создаю playbook Terraform c блоком провайдера ```providers.tf```
+
+```bash
+terraform {
+  required_providers {
+    yandex = {
+      source = "yandex-cloud/yandex"
+    }
+  }
+  required_version = ">= 0.13"
+}
+
+# Конфигурация провайдера Yandex Cloud
+provider "yandex" {
+  token     = var.yc_token     # OAuth-токен (из переменных)
+  cloud_id  = var.yc_cloud_id  # ID облака
+  folder_id = var.yc_folder_id # ID каталога
+  zone      = var.zone         # Зона для ресурсов
+}
+```
+Затем ```compute.tf``` в котором описываю три ВМ: NAT-инстанс, публичную ВМ и приватную ВМ.
+
+
+
+
+

@@ -89,3 +89,13 @@ ssh -i ~/.ssh/id_rsa ubuntu@$(terraform output -raw public_vm_external_ip)
 Успешно подключивших, проверяю доступ в интернет
 
 ![alt text](Pictures/pic010.jpg)
+
+Затем отлогиниваюсь от публичной ВМ и на локальной ВМ (Debian 12) с помощью команды
+
+```bash
+terraform output -raw private_vm_internal_ip
+```
+
+получаю внутренний IP приватной ВМ
+
+![alt text](Pictures/pic011.jpg)

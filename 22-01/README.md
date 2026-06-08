@@ -67,7 +67,7 @@ provider "yandex" {
 
 ![alt text](Pictures/pic03.jpg)
 
-Потом [network.tf]([22-01/Files/network.tf](https://github.com/Anton-Shcherbatykh/FOPS-38_22/blob/main/22-01/Files/network.tf) в котором 
+Потом [network.tf](https://github.com/Anton-Shcherbatykh/FOPS-38_22/blob/main/22-01/Files/network.tf) в котором 
 
 Создаю VPC в зоне ru-central1-a.
 

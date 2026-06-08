@@ -15,7 +15,7 @@ variable "yc_folder_id" {
   type        = string
 }
 
-# --- Переменные с значениями по умолчанию ---
+# --- Переменные со значениями по умолчанию ---
 variable "zone" {
   description = "Default availability zone for resources"
   type        = string

@@ -90,6 +90,8 @@ ssh -i ~/.ssh/id_rsa ubuntu@$(terraform output -raw public_vm_external_ip)
 
 ![alt text](Pictures/pic010.jpg)
 
+Пинг на 8.8.8.8 проходит успешно.
+
 Затем отлогиниваюсь от публичной ВМ и на локальной ВМ (Debian 12) с помощью команды
 
 ```bash
@@ -99,3 +101,23 @@ terraform output -raw private_vm_internal_ip
 получаю внутренний IP приватной ВМ
 
 ![alt text](Pictures/pic011.jpg)
+
+После этих манипуляций подключаюсь к публичной ВМ с параметром -A (ForwardAgent)
+
+```bash
+ssh -A -i ~/.ssh/homework3818 ubuntu@$(terraform output -raw public_vm_external_ip)
+```
+
+и с неё уже перехожу на приватную ВМ командой 
+
+```bash
+ssh ubuntu@192.168.20.19
+```
+
+![alt text](Pictures/pic012.jpg)
+
+Оттуда запускаю пинг на 8.8.8.8
+
+![alt text](Pictures/pic013.jpg)
+
+Трафик маршрутизируется через NAT-инстанс (192.168.10.254). Пинг проходит успешно (потерь пакетов нет).

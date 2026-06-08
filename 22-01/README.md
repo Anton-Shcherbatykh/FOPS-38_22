@@ -71,14 +71,18 @@ provider "yandex" {
 
 Создаю VPC в зоне ru-central1-a.
 
-Публичную подсеть public (192.168.10.0/24) содержит:
+![alt text](Pictures/pic02.jpg)
+
+Публичную подсеть public (192.168.10.0/24) которая содержит:
 
 - NAT-инстанс с внутренним адресом 192.168.10.254 и внешним IP (через nat = true).
+
+![alt text](Pictures/pic05.jpg)
 
 Приватную подсеть private (192.168.20.0/24) содержит:
 
 - Таблицу маршрутизации, направляющую весь трафик (0.0.0.0/0) на NAT-инстанс.
 
-![alt text](Pictures/pic02.jpg)
+![alt text](Pictures/pic06.jpg)
 
 

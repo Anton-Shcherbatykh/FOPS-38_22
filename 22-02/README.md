@@ -39,13 +39,11 @@
 
 [security_group.tf](https://github.com/Anton-Shcherbatykh/FOPS-38_22/blob/main/22-02/Files/security_group.tf) — создание группы безопасности для ВМ, разрешающей HTTP и SSH.
 
-[compute.tf](https://github.com/Anton-Shcherbatykh/FOPS-38_22/blob/main/22-02/Files/compute.tf) — создание NAT-инстанса с публичным IP, настройка IP-форвардинга и DNAT для перенаправления трафика на внутренний балансировщик.
-
 [storage.tf](https://github.com/Anton-Shcherbatykh/FOPS-38_22/blob/main/22-02/Files/storage.tf) — создание сервисного аккаунта для Object Storage, статических ключей, бакета и загрузка картинки с публичным доступом.
 
 [instance_group.tf](https://github.com/Anton-Shcherbatykh/FOPS-38_22/blob/main/22-02/Files/instance_group.tf) — создание сервисного аккаунта для группы ВМ, самой Instance Group из 3 ВМ на LAMP-образе, настройка user_data для веб-страницы и health check.
 
-[loadbalancer.tf](https://github.com/Anton-Shcherbatykh/FOPS-38_22/blob/main/22-02/Files/loadbalancer.tf) — создание целевой группы (на основе IP-адресов ВМ) и внутреннего сетевого балансировщика с привязкой к целевой группе.
+[loadbalancer.tf](https://github.com/Anton-Shcherbatykh/FOPS-38_22/blob/main/22-02/Files/loadbalancer.tf) — создание целевой группы (на основе IP-адресов ВМ) и сетевого балансировщика с привязкой к целевой группе.
 
 [outputs.tf](https://github.com/Anton-Shcherbatykh/FOPS-38_22/blob/main/22-02/Files/outputs.tf) — вывод важной информации: публичный IP NAT-инстанса, внутренний IP балансировщика, URL картинки и ID группы.
 

@@ -29,7 +29,9 @@
 
 1. Создаём Instance Group (и все остальные ресурсы, кроме балансировщика)
 
+```bash
 terraform apply -target=yandex_compute_instance_group.lamp_ig -parallelism=1
+```
 
 Эта команда создаст:
 
@@ -42,7 +44,7 @@ terraform apply -target=yandex_compute_instance_group.lamp_ig -parallelism=1
 
 2. Создаём балансировщик, подключая его к целевой группе
 
+```bash
 terraform apply -parallelism=1
-
-
+```
 Terraform создаст балансировщик и привяжет его к целевой группе.

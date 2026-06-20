@@ -1,19 +1,18 @@
-# Группа безопасности для Instance Group (HTTP + SSH)
 resource "yandex_vpc_security_group" "lamp_sg" {
   name        = "lamp-instance-sg"
-  description = "Allow HTTP and SSH for LAMP instances"
+  description = "Allow HTTP and SSH from anywhere"
   network_id  = yandex_vpc_network.task1_network.id
 
   ingress {
     protocol       = "TCP"
-    description    = "HTTP"
+    description    = "HTTP from internet"
     v4_cidr_blocks = ["0.0.0.0/0"]
     port           = 80
   }
 
   ingress {
     protocol       = "TCP"
-    description    = "SSH"
+    description    = "SSH from internet"
     v4_cidr_blocks = ["0.0.0.0/0"]
     port           = 22
   }

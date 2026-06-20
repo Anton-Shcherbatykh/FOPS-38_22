@@ -21,7 +21,7 @@ locals {
     <head><meta charset="UTF-8"><title>LAMP Cluster</title></head>
     <body>
     <h1>ВМ из Instance Group: $(hostname)</h1>
-    <img src="${local.image_url}" alt="mi24" width="600">
+    <img src="${local.image_url}" alt="Картинка из Object Storage" width="600">
     <p><a href="${local.image_url}">${local.image_url}</a></p>
     </body>
     </html>

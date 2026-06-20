@@ -66,7 +66,9 @@ terraform apply -target=yandex_compute_instance_group.lamp_ig -parallelism=1
 - Сервисные аккаунты и роли
 - Instance Group с тремя ВМ
 
+![alt text](Pictures/pic000.jpg)
 
+![alt text](Pictures/pic001.jpg)
 
 После успешного завершения целевая группа будет создана автоматически.
 

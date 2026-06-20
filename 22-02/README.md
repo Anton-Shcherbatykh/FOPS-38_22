@@ -99,3 +99,11 @@ terraform apply -parallelism=1
 и проверяем снова в браузере, теперь изображение "стягивается с ВМ ```ujew```
 
 ![alt text](Pictures/pic06.jpg)
+
+Затем останавливаем и эту ВМ
+
+![alt text](Pictures/pic08.jpg)
+
+и видим, что теперь получаем изображение с ВМ ```amiq```
+
+![alt text](Pictures/pic09.jpg)

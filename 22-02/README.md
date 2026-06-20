@@ -49,19 +49,11 @@
 
 [outputs.tf](https://github.com/Anton-Shcherbatykh/FOPS-38_22/blob/main/22-02/Files/outputs.tf) — вывод важной информации: публичный IP NAT-инстанса, внутренний IP балансировщика, URL картинки и ID группы.
 
+Проверяем сам terraform - всё в порядке, инициализация прошла успешно
 
-Создаёт бакет, загружает в него указанный локальный файл с картинкой и делает его публичным.
+![alt text](Pictures/pic01.jpg)
 
-Создаёт сеть, подсеть, группу безопасности (опционально).
-
-Создаёт Instance Group с 3 ВМ на базе LAMP-образа (fd827b91d99psvq5fjit). В user_data формируется веб-страница с ссылкой на картинку из бакета.
-
-Настраивает проверку состояния (HTTP health check) для группы.
-
-Создаёт сетевой балансировщик (Network Load Balancer) и подключает к нему целевую группу, созданную инстанс-группой.
-
-
-1. Создаём Instance Group (и все остальные ресурсы, кроме балансировщика)
+Создаём Instance Group (и все остальные ресурсы, кроме балансировщика)
 
 ```bash
 terraform apply -target=yandex_compute_instance_group.lamp_ig -parallelism=1
@@ -73,6 +65,8 @@ terraform apply -target=yandex_compute_instance_group.lamp_ig -parallelism=1
 - Бакет и картинку
 - Сервисные аккаунты и роли
 - Instance Group с тремя ВМ
+
+
 
 После успешного завершения целевая группа будет создана автоматически.
 

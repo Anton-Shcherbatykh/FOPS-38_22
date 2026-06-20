@@ -37,17 +37,19 @@
 
 [network.tf](https://github.com/Anton-Shcherbatykh/FOPS-38_22/blob/main/22-02/Files/network.tf) — создание VPC, публичной и приватной подсетей, таблицы маршрутизации для NAT.
 
-security_group.tf — создание группы безопасности для ВМ, разрешающей HTTP и SSH.
+[security_group.tf](https://github.com/Anton-Shcherbatykh/FOPS-38_22/blob/main/22-02/Files/security_group.tf) — создание группы безопасности для ВМ, разрешающей HTTP и SSH.
 
-compute.tf — создание NAT-инстанса с публичным IP, настройка IP-форвардинга и DNAT для перенаправления трафика на внутренний балансировщик.
+[compute.tf](https://github.com/Anton-Shcherbatykh/FOPS-38_22/blob/main/22-02/Files/compute.tf) — создание NAT-инстанса с публичным IP, настройка IP-форвардинга и DNAT для перенаправления трафика на внутренний балансировщик.
 
-storage.tf — создание сервисного аккаунта для Object Storage, статических ключей, бакета и загрузка картинки с публичным доступом.
+[storage.tf](https://github.com/Anton-Shcherbatykh/FOPS-38_22/blob/main/22-02/Files/storage.tf) — создание сервисного аккаунта для Object Storage, статических ключей, бакета и загрузка картинки с публичным доступом.
 
-instance_group.tf — создание сервисного аккаунта для группы ВМ, самой Instance Group из 3 ВМ на LAMP-образе, настройка user_data для веб-страницы и health check.
+[instance_group.tf](https://github.com/Anton-Shcherbatykh/FOPS-38_22/blob/main/22-02/Files/instance_group.tf) — создание сервисного аккаунта для группы ВМ, самой Instance Group из 3 ВМ на LAMP-образе, настройка user_data для веб-страницы и health check.
 
-loadbalancer.tf — создание целевой группы (на основе IP-адресов ВМ) и внутреннего сетевого балансировщика с привязкой к целевой группе.
+[loadbalancer.tf](https://github.com/Anton-Shcherbatykh/FOPS-38_22/blob/main/22-02/Files/loadbalancer.tf) — создание целевой группы (на основе IP-адресов ВМ) и внутреннего сетевого балансировщика с привязкой к целевой группе.
 
-outputs.tf — вывод важной информации: публичный IP NAT-инстанса, внутренний IP балансировщика, URL картинки и ID группы.
+[outputs.tf](https://github.com/Anton-Shcherbatykh/FOPS-38_22/blob/main/22-02/Files/outputs.tf) — вывод важной информации: публичный IP NAT-инстанса, внутренний IP балансировщика, URL картинки и ID группы.
+
+
 Создаёт бакет, загружает в него указанный локальный файл с картинкой и делает его публичным.
 
 Создаёт сеть, подсеть, группу безопасности (опционально).

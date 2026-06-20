@@ -1,22 +1,28 @@
-locals {
-  # Публичный URL картинки из бакета
-  image_url = "https://${var.bucket_name}.storage.yandexcloud.net/${yandex_storage_object.image.key}"
+resource "yandex_iam_service_account" "ig_sa" {
+  name        = "ig-service-account"
+  folder_id   = var.yc_folder_id
+}
 
-  # User-data скрипт для создания веб-страницы со ссылкой на картинку
+resource "yandex_resourcemanager_folder_iam_member" "ig_sa_editor" {
+  folder_id = var.yc_folder_id
+  role      = "editor"
+  member    = "serviceAccount:${yandex_iam_service_account.ig_sa.id}"
+}
+
+locals {
+  image_url = "https://${var.bucket_name}.storage.yandexcloud.net/${yandex_storage_object.image.key}"
   lamp_user_data = <<-EOF
     #!/bin/bash
-    # Активация и запуск Apache (в LAMP образе он уже установлен)
     systemctl enable httpd
     systemctl start httpd
-    # Создание index.html
     cat > /var/www/html/index.html <<HTML
     <!DOCTYPE html>
     <html>
-    <head><title>LAMP Cluster - ДЗ</title></head>
+    <head><meta charset="UTF-8"><title>LAMP Cluster</title></head>
     <body>
     <h1>ВМ из Instance Group: $(hostname)</h1>
-    <img src="${local.image_url}" alt="Картинка из Object Storage" width="600">
-    <p>Ссылка на картинку: <a href="${local.image_url}">${local.image_url}</a></p>
+    <img src="${local.image_url}" alt="mi24" width="600">
+    <p><a href="${local.image_url}">${local.image_url}</a></p>
     </body>
     </html>
     HTML
@@ -24,15 +30,21 @@ locals {
   EOF
 }
 
-# Instance Group из 3 ВМ
 resource "yandex_compute_instance_group" "lamp_ig" {
   name               = "lamp-instance-group"
   folder_id          = var.yc_folder_id
-  service_account_id = yandex_iam_service_account.storage_sa.id   # опционально, для доступа к метаданным
-  depends_on         = [yandex_storage_object.image]
+  service_account_id = yandex_iam_service_account.ig_sa.id
+  depends_on = [
+    yandex_storage_object.image,
+    yandex_resourcemanager_folder_iam_member.ig_sa_editor
+  ]
+
+  timeouts {
+    update = "15m"
+  }
 
   allocation_policy {
-    zones = [var.zone]   # можно указать несколько зон, если нужно
+    zones = [var.zone]
   }
 
   deploy_policy {
@@ -56,26 +68,25 @@ resource "yandex_compute_instance_group" "lamp_ig" {
 
     network_interface {
       network_id         = yandex_vpc_network.task1_network.id
-      subnet_ids         = [yandex_vpc_subnet.public.id]   # публичная подсеть
+      subnet_ids         = [yandex_vpc_subnet.public.id]
       security_group_ids = [yandex_vpc_security_group.lamp_sg.id]
-      nat                = true   # выдаём публичный IP каждой ВМ
+      nat                = true
     }
 
     metadata = {
       user-data = local.lamp_user_data
       ssh-keys  = "${var.vm_username}:${file(var.ssh_public_key_path)}"
     }
+  }
 
-    # Проверка состояния (health check)
-    health_check {
-      interval = 30
-      timeout  = 10
-      unhealthy_threshold = 3
-      healthy_threshold   = 2
-      http_options {
-        port = 80
-        path = "/index.html"
-      }
+  health_check {
+    interval = 30
+    timeout  = 10
+    unhealthy_threshold = 3
+    healthy_threshold   = 2
+    http_options {
+      port = 80
+      path = "/index.html"
     }
   }
 
@@ -84,9 +95,4 @@ resource "yandex_compute_instance_group" "lamp_ig" {
       size = 3
     }
   }
-}
-
-# Получаем данные о созданной группе (нужно для ID целевой группы)
-data "yandex_compute_instance_group" "ig_info" {
-  instance_group_id = yandex_compute_instance_group.lamp_ig.id
 }

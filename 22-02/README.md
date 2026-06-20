@@ -53,6 +53,10 @@
 
 ![alt text](Pictures/pic01.jpg)
 
+Выполняем ```terraform plan```
+
+![alt text](Pictures/pic02.jpg)
+
 Создаём Instance Group (и все остальные ресурсы, кроме балансировщика)
 
 ```bash
@@ -66,9 +70,7 @@ terraform apply -target=yandex_compute_instance_group.lamp_ig -parallelism=1
 - Сервисные аккаунты и роли
 - Instance Group с тремя ВМ
 
-![alt text](Pictures/pic000.jpg)
-
-![alt text](Pictures/pic001.jpg)
+![alt text](Pictures/pic03.jpg)
 
 После успешного завершения целевая группа будет создана автоматически.
 

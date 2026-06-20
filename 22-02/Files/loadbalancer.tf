@@ -1,4 +1,18 @@
-# Сетевой балансировщик (Network Load Balancer) для Instance Group
+# Целевая группа, создаваемая на основе IP-адресов ВМ из Instance Group
+resource "yandex_lb_target_group" "lamp_tg" {
+  name      = "lamp-target-group"
+  folder_id = var.yc_folder_id
+
+  dynamic "target" {
+    for_each = yandex_compute_instance_group.lamp_ig.instances
+    content {
+      subnet_id = yandex_vpc_subnet.public.id
+      address   = target.value.network_interface[0].ip_address
+    }
+  }
+}
+
+# Внешний балансировщик
 resource "yandex_lb_network_load_balancer" "lamp_nlb" {
   name = "lamp-network-lb"
 
@@ -13,9 +27,8 @@ resource "yandex_lb_network_load_balancer" "lamp_nlb" {
   }
 
   attached_target_group {
-    target_group_id = data.yandex_compute_instance_group.ig_info.load_balancer[0].target_group_id
-
-    health_check {
+    target_group_id = yandex_lb_target_group.lamp_tg.id
+    healthcheck {
       name                = "http-health-check"
       interval            = 2
       timeout             = 1
@@ -26,4 +39,6 @@ resource "yandex_lb_network_load_balancer" "lamp_nlb" {
       }
     }
   }
+
+  depends_on = [yandex_lb_target_group.lamp_tg]
 }

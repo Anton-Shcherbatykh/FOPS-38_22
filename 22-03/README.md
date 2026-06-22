@@ -83,10 +83,10 @@ resource "yandex_kms_symmetric_key" "bucket_key" {
 
 ![alt text](Pictures/pic03.jpg)
 
-![alt text](Pictures/pic04.jpg)
-
 ![alt text](Pictures/pic05.jpg)
 
-Ключ в KMS создан и 
+![alt text](Pictures/pic04.jpg)
+
+Ключ в KMS создан.
 
 5. 

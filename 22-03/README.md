@@ -34,3 +34,59 @@
 
 Ответ 1.
 
+1. Разворачиваем структуру в облаке с помощью файлов из предыдущего задания (удалось победить ТП Яндекс.Клауда и наконец код terraform отработал без ошибок по квотам)
+
+![alt text](Pictures/pic00_1.jpg)
+
+![alt text](Pictures/pic00.jpg)
+
+Проверяем - бакет на месте ))
+
+![alt text](Pictures/pic01.jpg)
+
+2. Затем добавляю в файл [storage.tf](https://github.com/Anton-Shcherbatykh/FOPS-38_22/blob/main/22-03/Files/storage.tf) ресурс для создания ключа KMS
+
+```bash
+# Добавляем ресурс для создания ключа KMS
+resource "yandex_kms_symmetric_key" "bucket_key" {
+  name              = "shcherbatykh-bucket-key"
+  description       = "KMS key for bucket encryption (Homework: "Security in Cloud Providers")"
+  default_algorithm = "AES_256"
+  rotation_period   = "4383h" # 1/2 года
+}
+```
+3. После этого, в ресурс  ```yandex_storage_bucket "bucket"``` добавляю блок и назначаю сервисному аккаунту права на использование ключа KMS
+
+```bash
+# Блок для шифрования
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        kms_master_key_id = yandex_kms_symmetric_key.bucket_key.id
+        sse_algorithm     = "aws:kms"
+      }
+    }
+  }
+  
+  depends_on = [
+    yandex_resourcemanager_folder_iam_member.storage_editor
+    yandex_kms_symmetric_key_iam_member.key_encrypter
+  ]
+}
+```
+
+![alt text](Pictures/pic02.jpg)
+
+Это даёт сервисному аккаунту недостающую роль для работы с ключом KMS. Без него шифрование бакета через Terraform будет невозможно.
+
+4. Выполняю ```terraform apply``` и получаю результат
+
+![alt text](Pictures/pic03.jpg)
+
+![alt text](Pictures/pic04.jpg)
+
+![alt text](Pictures/pic05.jpg)
+
+Ключ в KMS создан и 
+
+5. 

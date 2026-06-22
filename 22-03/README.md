@@ -117,4 +117,34 @@ resource "yandex_kms_symmetric_key" "bucket_key" {
 
 Как видим, всё в порядке - всё успешно зашифровано.
 
-6. 
+6. Приступаем ко второй части задания по созданию статический сайт в Object Storage c собственным публичным адресом и доступным по HTTPS.
+
+Для этих целей я создам файл [index.html](https://github.com/Anton-Shcherbatykh/FOPS-38_22/blob/main/22-03/Files/index.html) для статического сайта. Он будет содержать информацию о домашнем задании.
+
+Затем в сервисе Object Storage создаю бакет ```shcherbatykh-static-site``` с публичным доступом.
+
+![alt text](Pictures/pic012.jpg)
+
+и помещаю в него ранее созданный файл ```index.html```
+
+![alt text](Pictures/pic013.jpg)
+
+Настраиваю хостинг статического сайта. В меню бакета выбираю Веб-сайт (или Хостинг), указываю главную страницу (ранее созданный index.html). Всё сохраняю.
+
+![alt text](Pictures/pic014.jpg)
+
+После проведённых манипуляций сайт будет доступен по адресу ```https://shcherbatykh-static-site.website.yandexcloud.net/```
+
+7. Создаю и привязываю SSL-сертификат для HTTPS (выбрал для простоты тип Let's Encrypt).
+
+![alt text](Pictures/pic015.jpg)
+
+![alt text](Pictures/pic018.jpg)
+
+8. Проверяю доступ по HTTPS
+
+![alt text](Pictures/pic016.jpg)
+
+![alt text](Pictures/pic017.jpg)
+
+Всё отображается корректно. Шифрование работает.

@@ -1,4 +1,4 @@
-# Группа безопасности для Instance Group (HTTP + SSH)
+# Группа для LAMP ВМ
 resource "yandex_vpc_security_group" "lamp_sg" {
   name        = "lamp-instance-sg"
   description = "Allow HTTP from internet and SSH from anywhere"

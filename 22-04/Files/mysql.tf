@@ -7,17 +7,16 @@ resource "random_password" "mysql" {
 # Кластер MySQL
 resource "yandex_mdb_mysql_cluster" "netology" {
   name        = "netology-mysql-cluster"
-  environment = "PRESTABLE"                     # по условию
+  environment = "PRESTABLE"
   network_id  = yandex_vpc_network.task1_network.id
   version     = "8.0"
 
   resources {
-    resource_preset_id = "b2.medium"           # Intel Broadwell, 50% vCPU
+    resource_preset_id = "b2.medium"   # Intel Broadwell, 50% vCPU
     disk_type_id       = "network-ssd"
-    disk_size          = 20                    # 20 ГБ
+    disk_size          = 20
   }
 
-  # Два хоста в разных зонах и подсетях (отказоустойчивость)
   host {
     zone      = "ru-central1-a"
     subnet_id = yandex_vpc_subnet.private_a.id
@@ -32,10 +31,9 @@ resource "yandex_mdb_mysql_cluster" "netology" {
     minutes = 59
   }
 
-  deletion_protection = true                   # защита от удаления
-
+  deletion_protection = true
   maintenance_window {
-    type = "ANYTIME"                           # произвольное время ТО
+    type = "ANYTIME"
   }
 
   security_group_ids = [yandex_vpc_security_group.mysql_sg.id]
@@ -61,6 +59,6 @@ resource "yandex_mdb_mysql_user" "netology" {
 
   permission {
     database_name = yandex_mdb_mysql_database.netology.name
-    roles         = ["ALL_PRIVILEGES"]
+    roles         = ["ALL"]
   }
 }

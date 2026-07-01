@@ -1,37 +1,22 @@
-# Существующие выводы --- задание 1 ---
-output "public_vm_external_ip" {
-  value = yandex_compute_instance.public_vm.network_interface[0].nat_ip_address
+# Bucket
+output "bucket_name" {
+  value = yandex_storage_bucket.bucket.bucket
 }
-
-output "private_vm_internal_ip" {
-  value = yandex_compute_instance.private_vm.network_interface[0].ip_address
-}
-
-output "nat_instance_external_ip" {
-  value = yandex_compute_instance.nat.network_interface[0].nat_ip_address
-}
-
-# Добавленные выводы --- задание 2 ---
 output "image_public_url" {
-  value = "https://${var.bucket_name}.storage.yandexcloud.net/${yandex_storage_object.image.key}"
+  value = "https://${yandex_storage_bucket.bucket.bucket}.storage.yandexcloud.net/mi24.jpg"
 }
 
-output "network_lb_external_ip" {
-  value = one(yandex_lb_network_load_balancer.lamp_nlb.listener).external_address_spec[0].address
+# Instance Group
+output "instance_group_id" {
+  value = yandex_compute_instance_group.lamp_ig.id
 }
 
-output "application_lb_external_ip" {
-  value = one(yandex_alb_load_balancer.lamp_alb.listener).endpoint[0].address[0].external_ipv4_address[0].address
+# Load Balancer
+output "load_balancer_static_ip" {
+  value = yandex_vpc_address.static_ip.external_ipv4_address[0].address
 }
 
-output "instance_group_external_ips" {
-  value = [
-    for instance in yandex_compute_instance_group.lamp_ig.instances :
-    instance.network_interface[0].nat_ip_address
-  ]
-}
-
-# MySQL --- задание 4 ---
+# MySQL
 output "mysql_cluster_id" {
   value = yandex_mdb_mysql_cluster.netology.id
 }
@@ -49,7 +34,7 @@ output "mysql_hosts" {
   value = [for h in yandex_mdb_mysql_cluster.netology.host : h.fqdn]
 }
 
-# Kubernetes --- задание 4 --- 
+# Kubernetes
 output "k8s_cluster_id" {
   value = yandex_kubernetes_cluster.regional.id
 }

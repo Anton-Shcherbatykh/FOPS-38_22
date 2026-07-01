@@ -17,6 +17,21 @@ resource "yandex_iam_service_account_static_access_key" "storage_key" {
   depends_on         = [yandex_resourcemanager_folder_iam_member.storage_editor]
 }
 
+# KMS ключ для бакета (новый, не пересекается с k8s)
+resource "yandex_kms_symmetric_key" "bucket_key" {
+  name              = "bucket-encryption-key"
+  description       = "KMS key for bucket encryption"
+  default_algorithm = "AES_256"
+  rotation_period   = "4383h"
+}
+
+# Права на использование ключа для сервис-аккаунта storage
+resource "yandex_kms_symmetric_key_iam_member" "bucket_key_encrypter" {
+  symmetric_key_id = yandex_kms_symmetric_key.bucket_key.id
+  role             = "kms.keys.encrypterDecrypter"
+  member           = "serviceAccount:${yandex_iam_service_account.storage_sa.id}"
+}
+
 # Бакет Object Storage
 resource "yandex_storage_bucket" "bucket" {
   bucket      = var.bucket_name
@@ -27,7 +42,6 @@ resource "yandex_storage_bucket" "bucket" {
     read = true
   }
 
-# Блок для шифрования
   server_side_encryption_configuration {
     rule {
       apply_server_side_encryption_by_default {
@@ -36,26 +50,11 @@ resource "yandex_storage_bucket" "bucket" {
       }
     }
   }
-  
+
   depends_on = [
-    yandex_resourcemanager_folder_iam_member.storage_editor
-    yandex_kms_symmetric_key_iam_member.key_encrypter
+    yandex_resourcemanager_folder_iam_member.storage_editor,
+    yandex_kms_symmetric_key_iam_member.bucket_key_encrypter,
   ]
-}
-
-# Добавляем ресурс для создания ключа KMS
-resource "yandex_kms_symmetric_key" "bucket_key" {
-  name              = "shcherbatykh-bucket-key"
-  description       = "KMS key for bucket encryption (Homework: "Security in Cloud Providers")"
-  default_algorithm = "AES_256"
-  rotation_period   = "4383h" # 1/2 года
-}
-
-# Назначаем права сервисному аккаунту на использование ключа KMS
-resource "yandex_kms_symmetric_key_iam_member" "key_encrypter" {
-  symmetric_key_id = yandex_kms_symmetric_key.bucket_key.id
-  role             = "kms.keys.encrypterDecrypter"
-  member           = "serviceAccount:${yandex_iam_service_account.storage_sa.id}"
 }
 
 # Загрузка картинки

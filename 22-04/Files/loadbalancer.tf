@@ -1,4 +1,3 @@
-# Целевая группа, создаваемая на основе ВМ из Instance Group
 resource "yandex_lb_target_group" "lamp_tg" {
   name      = "lamp-target-group"
   folder_id = var.yc_folder_id
@@ -12,13 +11,9 @@ resource "yandex_lb_target_group" "lamp_tg" {
   }
 }
 
-resource "time_sleep" "wait_for_quota" {
-  create_duration = "60s"
-}
-
-# Сетевой балансировщик, использующий созданную целевую группу
 resource "yandex_lb_network_load_balancer" "lamp_nlb" {
   name = "lamp-network-lb"
+  type = "external"
 
   listener {
     name        = "http-listener"
@@ -27,6 +22,7 @@ resource "yandex_lb_network_load_balancer" "lamp_nlb" {
     target_port = 80
     external_address_spec {
       ip_version = "ipv4"
+      address    = yandex_vpc_address.static_ip.external_ipv4_address[0].address
     }
   }
 

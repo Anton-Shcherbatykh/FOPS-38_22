@@ -22,10 +22,31 @@ resource "yandex_resourcemanager_folder_iam_member" "k8s_sa_compute_admin" {
   member    = "serviceAccount:${yandex_iam_service_account.k8s_sa.id}"
 }
 
-# Региональный кластер Kubernetes
+# роль vpc.publicAdmin
+resource "yandex_resourcemanager_folder_iam_member" "k8s_sa_public_admin" {
+  folder_id = var.yc_folder_id
+  role      = "vpc.publicAdmin"
+  member    = "serviceAccount:${yandex_iam_service_account.k8s_sa.id}"
+}
+
+# KMS ключ для шифрования
+resource "yandex_kms_symmetric_key" "k8s_key" {
+  name              = "k8s-encryption-key"
+  description       = "KMS key for Kubernetes cluster encryption"
+  default_algorithm = "AES_256"
+  rotation_period   = "4383h"
+}
+
+resource "yandex_kms_symmetric_key_iam_member" "k8s_key_encrypter" {
+  symmetric_key_id = yandex_kms_symmetric_key.k8s_key.id
+  role             = "kms.keys.encrypterDecrypter"
+  member           = "serviceAccount:${yandex_iam_service_account.k8s_sa.id}"
+}
+
+# Региональный кластер
 resource "yandex_kubernetes_cluster" "regional" {
   name        = "netology-k8s-regional"
-  description = "Regional Kubernetes cluster"
+  description = "Regional Kubernetes cluster (zones a, b, e)"
   network_id  = yandex_vpc_network.task1_network.id
 
   master {
@@ -40,8 +61,8 @@ resource "yandex_kubernetes_cluster" "regional" {
         subnet_id = yandex_vpc_subnet.public_b.id
       }
       location {
-        zone      = "ru-central1-d"
-        subnet_id = yandex_vpc_subnet.public_d.id
+        zone      = "ru-central1-e"
+        subnet_id = yandex_vpc_subnet.public_e.id
       }
     }
     public_ip = true
@@ -52,17 +73,19 @@ resource "yandex_kubernetes_cluster" "regional" {
   node_service_account_id = yandex_iam_service_account.k8s_sa.id
 
   kms_provider {
-    key_id = yandex_kms_symmetric_key.bucket_key.id
+    key_id = yandex_kms_symmetric_key.k8s_key.id
   }
 
   depends_on = [
     yandex_resourcemanager_folder_iam_member.k8s_sa_editor,
     yandex_resourcemanager_folder_iam_member.k8s_sa_k8s_agent,
     yandex_resourcemanager_folder_iam_member.k8s_sa_compute_admin,
+    yandex_resourcemanager_folder_iam_member.k8s_sa_public_admin,
+    yandex_kms_symmetric_key_iam_member.k8s_key_encrypter,
   ]
 }
 
-# Группа узлов с автомасштабированием 3–6
+# Группа узлов
 resource "yandex_kubernetes_node_group" "main" {
   cluster_id = yandex_kubernetes_cluster.regional.id
   name       = "main-node-group"
@@ -78,8 +101,8 @@ resource "yandex_kubernetes_node_group" "main" {
       subnet_id = yandex_vpc_subnet.public_b.id
     }
     location {
-      zone      = "ru-central1-d"
-      subnet_id = yandex_vpc_subnet.public_d.id
+      zone      = "ru-central1-e"
+      subnet_id = yandex_vpc_subnet.public_e.id
     }
   }
 
@@ -97,7 +120,7 @@ resource "yandex_kubernetes_node_group" "main" {
       subnet_ids = [
         yandex_vpc_subnet.public.id,
         yandex_vpc_subnet.public_b.id,
-        yandex_vpc_subnet.public_d.id
+        yandex_vpc_subnet.public_e.id
       ]
       nat = true
       security_group_ids = [yandex_vpc_security_group.k8s_api_sg.id]

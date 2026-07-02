@@ -1,35 +1,42 @@
-# Сервис-аккаунт для Kubernetes
-resource "yandex_iam_service_account" "k8s_sa" {
-  name        = "k8s-service-account"
+# --- Сервисный аккаунт для ресурсов кластера ---
+resource "yandex_iam_service_account" "k8s_res_sa" {
+  name        = "k8s-res-sa"
   folder_id   = var.yc_folder_id
 }
 
-resource "yandex_resourcemanager_folder_iam_member" "k8s_sa_editor" {
-  folder_id = var.yc_folder_id
-  role      = "editor"
-  member    = "serviceAccount:${yandex_iam_service_account.k8s_sa.id}"
-}
-
-resource "yandex_resourcemanager_folder_iam_member" "k8s_sa_k8s_agent" {
+# Назначение ролей для аккаунта ресурсов (обязательные + editor для общих прав)
+resource "yandex_resourcemanager_folder_iam_member" "k8s_res_sa_agent" {
   folder_id = var.yc_folder_id
   role      = "k8s.clusters.agent"
-  member    = "serviceAccount:${yandex_iam_service_account.k8s_sa.id}"
+  member    = "serviceAccount:${yandex_iam_service_account.k8s_res_sa.id}"
 }
 
-resource "yandex_resourcemanager_folder_iam_member" "k8s_sa_compute_admin" {
-  folder_id = var.yc_folder_id
-  role      = "compute.admin"
-  member    = "serviceAccount:${yandex_iam_service_account.k8s_sa.id}"
-}
-
-# роль vpc.publicAdmin
-resource "yandex_resourcemanager_folder_iam_member" "k8s_sa_public_admin" {
+resource "yandex_resourcemanager_folder_iam_member" "k8s_res_sa_public_admin" {
   folder_id = var.yc_folder_id
   role      = "vpc.publicAdmin"
-  member    = "serviceAccount:${yandex_iam_service_account.k8s_sa.id}"
+  member    = "serviceAccount:${yandex_iam_service_account.k8s_res_sa.id}"
 }
 
-# KMS ключ для шифрования
+resource "yandex_resourcemanager_folder_iam_member" "k8s_res_sa_editor" {
+  folder_id = var.yc_folder_id
+  role      = "editor"
+  member    = "serviceAccount:${yandex_iam_service_account.k8s_res_sa.id}"
+}
+
+# --- Сервисный аккаунт для узлов кластера ---
+resource "yandex_iam_service_account" "k8s_node_sa" {
+  name        = "k8s-node-sa"
+  folder_id   = var.yc_folder_id
+}
+
+# Назначение роли для аккаунта узлов (скачивание образов из Container Registry)
+resource "yandex_resourcemanager_folder_iam_member" "k8s_node_sa_puller" {
+  folder_id = var.yc_folder_id
+  role      = "container-registry.images.puller"
+  member    = "serviceAccount:${yandex_iam_service_account.k8s_node_sa.id}"
+}
+
+# --- KMS ключ для шифрования кластера ---
 resource "yandex_kms_symmetric_key" "k8s_key" {
   name              = "k8s-encryption-key"
   description       = "KMS key for Kubernetes cluster encryption"
@@ -37,13 +44,14 @@ resource "yandex_kms_symmetric_key" "k8s_key" {
   rotation_period   = "4383h"
 }
 
+# Назначение прав на использование ключа для аккаунта ресурсов
 resource "yandex_kms_symmetric_key_iam_member" "k8s_key_encrypter" {
   symmetric_key_id = yandex_kms_symmetric_key.k8s_key.id
   role             = "kms.keys.encrypterDecrypter"
-  member           = "serviceAccount:${yandex_iam_service_account.k8s_sa.id}"
+  member           = "serviceAccount:${yandex_iam_service_account.k8s_res_sa.id}"
 }
 
-# Региональный кластер
+# --- Региональный кластер Kubernetes ---
 resource "yandex_kubernetes_cluster" "regional" {
   name        = "netology-k8s-regional"
   description = "Regional Kubernetes cluster (zones a, b, e)"
@@ -65,27 +73,28 @@ resource "yandex_kubernetes_cluster" "regional" {
         subnet_id = yandex_vpc_subnet.public_e.id
       }
     }
-    public_ip = true
+    public_ip = true   # обязательно, если мастера имеют публичный IP
     security_group_ids = [yandex_vpc_security_group.k8s_api_sg.id]
   }
 
-  service_account_id      = yandex_iam_service_account.k8s_sa.id
-  node_service_account_id = yandex_iam_service_account.k8s_sa.id
+  # Используем разные сервисные аккаунты
+  service_account_id      = yandex_iam_service_account.k8s_res_sa.id   # для ресурсов
+  node_service_account_id = yandex_iam_service_account.k8s_node_sa.id  # для узлов
 
   kms_provider {
     key_id = yandex_kms_symmetric_key.k8s_key.id
   }
 
   depends_on = [
-    yandex_resourcemanager_folder_iam_member.k8s_sa_editor,
-    yandex_resourcemanager_folder_iam_member.k8s_sa_k8s_agent,
-    yandex_resourcemanager_folder_iam_member.k8s_sa_compute_admin,
-    yandex_resourcemanager_folder_iam_member.k8s_sa_public_admin,
+    yandex_resourcemanager_folder_iam_member.k8s_res_sa_agent,
+    yandex_resourcemanager_folder_iam_member.k8s_res_sa_public_admin,
+    yandex_resourcemanager_folder_iam_member.k8s_res_sa_editor,
+    yandex_resourcemanager_folder_iam_member.k8s_node_sa_puller,
     yandex_kms_symmetric_key_iam_member.k8s_key_encrypter,
   ]
 }
 
-# Группа узлов
+# --- Группа узлов ---
 resource "yandex_kubernetes_node_group" "main" {
   cluster_id = yandex_kubernetes_cluster.regional.id
   name       = "main-node-group"
@@ -122,7 +131,7 @@ resource "yandex_kubernetes_node_group" "main" {
         yandex_vpc_subnet.public_b.id,
         yandex_vpc_subnet.public_e.id
       ]
-      nat = true
+      nat = true   # узлы имеют публичный IP для доступа к интернету
       security_group_ids = [yandex_vpc_security_group.k8s_api_sg.id]
     }
     metadata = {

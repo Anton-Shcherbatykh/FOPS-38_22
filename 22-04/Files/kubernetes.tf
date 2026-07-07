@@ -4,7 +4,6 @@ resource "yandex_iam_service_account" "k8s_res_sa" {
   folder_id   = var.yc_folder_id
 }
 
-# Назначение ролей для аккаунта ресурсов (обязательные + editor для общих прав)
 resource "yandex_resourcemanager_folder_iam_member" "k8s_res_sa_agent" {
   folder_id = var.yc_folder_id
   role      = "k8s.clusters.agent"
@@ -23,20 +22,17 @@ resource "yandex_resourcemanager_folder_iam_member" "k8s_res_sa_editor" {
   member    = "serviceAccount:${yandex_iam_service_account.k8s_res_sa.id}"
 }
 
-# --- Сервисный аккаунт для узлов кластера ---
 resource "yandex_iam_service_account" "k8s_node_sa" {
   name        = "k8s-node-sa"
   folder_id   = var.yc_folder_id
 }
 
-# Назначение роли для аккаунта узлов (скачивание образов из Container Registry)
 resource "yandex_resourcemanager_folder_iam_member" "k8s_node_sa_puller" {
   folder_id = var.yc_folder_id
   role      = "container-registry.images.puller"
   member    = "serviceAccount:${yandex_iam_service_account.k8s_node_sa.id}"
 }
 
-# --- KMS ключ для шифрования кластера ---
 resource "yandex_kms_symmetric_key" "k8s_key" {
   name              = "k8s-encryption-key"
   description       = "KMS key for Kubernetes cluster encryption"
@@ -44,17 +40,16 @@ resource "yandex_kms_symmetric_key" "k8s_key" {
   rotation_period   = "4383h"
 }
 
-# Назначение прав на использование ключа для аккаунта ресурсов
 resource "yandex_kms_symmetric_key_iam_member" "k8s_key_encrypter" {
   symmetric_key_id = yandex_kms_symmetric_key.k8s_key.id
   role             = "kms.keys.encrypterDecrypter"
   member           = "serviceAccount:${yandex_iam_service_account.k8s_res_sa.id}"
 }
 
-# --- Региональный кластер Kubernetes ---
+# --- Региональный кластер (без публичного IP) ---
 resource "yandex_kubernetes_cluster" "regional" {
   name        = "netology-k8s-regional"
-  description = "Regional Kubernetes cluster (zones a, b, e)"
+  description = "Regional Kubernetes cluster (zones a, b, e) - private master"
   network_id  = yandex_vpc_network.task1_network.id
 
   master {
@@ -73,13 +68,15 @@ resource "yandex_kubernetes_cluster" "regional" {
         subnet_id = yandex_vpc_subnet.public_e.id
       }
     }
-    public_ip = true   # обязательно, если мастера имеют публичный IP
-    security_group_ids = [yandex_vpc_security_group.k8s_api_sg.id]
+    # public_ip = false (по умолчанию)
+    security_group_ids = [
+      yandex_vpc_security_group.k8s_cluster_nodegroup_traffic.id,
+      yandex_vpc_security_group.k8s_cluster_traffic.id
+    ]
   }
 
-  # Используем разные сервисные аккаунты
-  service_account_id      = yandex_iam_service_account.k8s_res_sa.id   # для ресурсов
-  node_service_account_id = yandex_iam_service_account.k8s_node_sa.id  # для узлов
+  service_account_id      = yandex_iam_service_account.k8s_res_sa.id
+  node_service_account_id = yandex_iam_service_account.k8s_node_sa.id
 
   kms_provider {
     key_id = yandex_kms_symmetric_key.k8s_key.id
@@ -94,24 +91,15 @@ resource "yandex_kubernetes_cluster" "regional" {
   ]
 }
 
-# --- Группа узлов ---
+# --- Группа узлов (без публичных IP, только в зоне a) ---
 resource "yandex_kubernetes_node_group" "main" {
   cluster_id = yandex_kubernetes_cluster.regional.id
   name       = "main-node-group"
-  description = "Main node group with autoscaling (3–6 nodes)"
+  description = "Main node group with autoscaling (3–6 nodes) in zone a, private IPs"
 
   allocation_policy {
     location {
-      zone      = "ru-central1-a"
-      subnet_id = yandex_vpc_subnet.public.id
-    }
-    location {
-      zone      = "ru-central1-b"
-      subnet_id = yandex_vpc_subnet.public_b.id
-    }
-    location {
-      zone      = "ru-central1-e"
-      subnet_id = yandex_vpc_subnet.public_e.id
+      zone = "ru-central1-a"
     }
   }
 
@@ -126,13 +114,14 @@ resource "yandex_kubernetes_node_group" "main" {
       type = "network-ssd"
     }
     network_interface {
-      subnet_ids = [
-        yandex_vpc_subnet.public.id,
-        yandex_vpc_subnet.public_b.id,
-        yandex_vpc_subnet.public_e.id
+      subnet_ids = [yandex_vpc_subnet.public.id]
+      nat        = false   # без публичного IP
+      security_group_ids = [
+        yandex_vpc_security_group.k8s_cluster_nodegroup_traffic.id,
+        yandex_vpc_security_group.k8s_nodegroup_traffic.id,
+        yandex_vpc_security_group.k8s_services_access.id,
+        yandex_vpc_security_group.k8s_ssh_access.id
       ]
-      nat = true   # узлы имеют публичный IP для доступа к интернету
-      security_group_ids = [yandex_vpc_security_group.k8s_api_sg.id]
     }
     metadata = {
       ssh-keys = "${var.vm_username}:${file(var.ssh_public_key_path)}"
@@ -145,5 +134,11 @@ resource "yandex_kubernetes_node_group" "main" {
       max     = 6
       initial = 3
     }
+  }
+
+  timeouts {
+    create = "1h30m"
+    update = "1h30m"
+    delete = "60m"
   }
 }
